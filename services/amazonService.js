@@ -71,103 +71,68 @@ async function loginToAmazon(email, password) {
 
 // Scraping function
 async function startAmazonScraping(email, password) {
-  try {
-    const isLoggedIn = await loginToAmazon(email, password);
-
-    if (!isLoggedIn) {
-      console.error('Login failed, aborting scraping.');
-      return { error: 'Login failed' };
-    }
-
-    console.log('Navigating to the Amazon cart page...');
-    await globalPage.goto(`${baseUrl}/gp/cart/view.html?ref_=nav_cart`, {
-      waitUntil: 'domcontentloaded',
-      timeout: 120000, // Increased timeout to 120 seconds
-    });
-
-    // Log the page content to see what the structure looks like
-    const pageContent = await globalPage.content();
-    console.log('Page content loaded. Checking product links...');
-
-    // Log specific HTML section to ensure we are in the right area
-    const cartContent = await globalPage.$eval('#sc-active-cart', (element) => element.outerHTML);
-    console.log('Cart content HTML:', cartContent); // Logs the HTML content of the cart column
-
-    // Scrape product URLs from the cart page
-    const productLinks = await globalPage.$$eval('#sc-active-cart .sc-item-product-title-cont .a-list-item a', (links) =>
-      links.map((link) => link.href)
-    );
-
-    console.log(`Found ${productLinks.length} product links.`); // Log the number of product links found
-
-    if (productLinks.length === 0) {
-      console.warn('No product links found. The cart might be empty or the page structure has changed.');
-    } else {
-      console.log('Product Links:', productLinks); // Log the list of product links
-    }
-
-    const results = [];
-
-    for (const productUrl of productLinks) {
+    try {
+      const isLoggedIn = await loginToAmazon(email, password);
+      if (!isLoggedIn) {
+        return { error: 'Login failed' };
+      }
+  
+      console.log('Navigating to the Amazon cart page...');
+      await globalPage.goto(`${baseUrl}/gp/cart/view.html`, { waitUntil: 'domcontentloaded', timeout: 120000 });
+  
+      const productLinks = await globalPage.$$eval('#sc-active-cart .sc-item-product-title-cont .a-list-item a', (links) =>
+        links.map((link) => link.href)
+      );
+  
+      if (productLinks.length === 0) {
+        console.warn('No product links found.');
+        return [];
+      }
+  
+      const results = [];
+      for (const productUrl of productLinks) {
         try {
-            console.log(`Navigating to product page: ${productUrl}`);
-            await globalPage.goto(productUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
-            
-            // Detailed logging and scraping attempt
-            const pageInfo = await globalPage.evaluate(() => {
-                const importantInfoDiv = document.querySelector('#importantInformation_feature_div');
-                let log = '';
-                let ingredients = 'Ingredients not found';
-    
-                if (importantInfoDiv) {
-                    log += 'Found #importantInformation_feature_div\n';
-                    const contentSections = importantInfoDiv.querySelectorAll('.a-section.content');
-                    log += `Found ${contentSections.length} .a-section.content elements\n`;
-    
-                    contentSections.forEach((section, index) => {
-                        const header = section.querySelector('h4');
-                        if (header) {
-                            log += `Section ${index + 1} header: ${header.innerText}\n`;
-                            if (header.innerText === 'Ingredients') {
-                                const paragraphs = section.querySelectorAll('p');
-                                log += `Found ${paragraphs.length} paragraphs in Ingredients section\n`;
-                                paragraphs.forEach((p, pIndex) => {
-                                    log += `Paragraph ${pIndex + 1} content: ${p.innerText}\n`;
-                                    if (p.innerText.trim() !== '') {
-                                        ingredients = p.innerText.trim();
-                                    }
-                                });
-                            }
-                        } else {
-                            log += `Section ${index + 1} has no h4 header\n`;
-                        }
-                    });
-                } else {
-                    log += '#importantInformation_feature_div not found\n';
+          await globalPage.goto(productUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
+  
+          const pageInfo = await globalPage.evaluate(() => {
+            let productName = document.querySelector('#productTitle')?.innerText?.trim() || 'Product name not found';
+            let ingredients = 'Ingredients not found';
+            const importantInfoDiv = document.querySelector('#importantInformation_feature_div');
+            if (importantInfoDiv) {
+              const contentSections = importantInfoDiv.querySelectorAll('.a-section.content');
+              contentSections.forEach((section) => {
+                const header = section.querySelector('h4');
+                if (header && header.innerText === 'Ingredients') {
+                  const paragraphs = section.querySelectorAll('p');
+                  paragraphs.forEach((p) => {
+                    if (p.innerText.trim()) {
+                      ingredients = p.innerText.trim();
+                    }
+                  });
                 }
-    
-                return { log, ingredients };
-            });
-            
-            console.log(`Detailed log for ${productUrl}:\n${pageInfo.log}`);
-            console.log(`Ingredients for ${productUrl}: ${pageInfo.ingredients}`);
-            results.push({ url: productUrl, ingredients: pageInfo.ingredients });
+              });
+            }
+            return { productName, ingredients };
+          });
+  
+          results.push({ url: productUrl, ...pageInfo });
         } catch (error) {
-            console.error(`Error scraping product ${productUrl}:`, error.message);
-            results.push({ url: productUrl, ingredients: 'Error: Unable to scrape' });
+          console.error(`Error scraping product ${productUrl}:`, error.message);
+          results.push({ url: productUrl, productName: 'Error: Unable to scrape', ingredients: 'Error: Unable to scrape' });
         }
+      }
+  
+      return results;
+    } catch (error) {
+      console.error('Error during scraping:', error.message);
+      throw error;
+    } finally {
+      await closeBrowser();
     }
-    
-    return results;
-  } catch (error) {
-    console.error('Error during scraping:', error.message);
-    throw error;
-  } finally {
-    await closeBrowser();
   }
-}
-
-module.exports = {
-  startAmazonScraping,
-  loginToAmazon,
-};
+  
+  module.exports = {
+    startAmazonScraping,
+    loginToAmazon,
+  };
+  

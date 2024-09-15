@@ -1,17 +1,15 @@
 import { useAuth, SignInButton, SignOutButton } from '@clerk/nextjs';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
+import { useRouter } from 'next/router';
 import styles from '../styles/Home.module.css';
 
 export default function Home() {
   const { isSignedIn } = useAuth();
   const [scrapingStatus, setScrapingStatus] = useState('');
   const [error, setError] = useState('');
-  const [formData, setFormData] = useState({
-    amazonEmail: '',
-    amazonPassword: '',
-  });
+  const [formData, setFormData] = useState({ amazonEmail: '', amazonPassword: '' });
+  const router = useRouter();
 
-  // Handle input changes
   const handleInputChange = (event) => {
     const { name, value } = event.target;
     setFormData((prevData) => ({ ...prevData, [name]: value }));
@@ -24,23 +22,23 @@ export default function Home() {
       setError('');
       fetch('/api/scrape-amazon', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),  // Pass the form data (email and password)
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
       })
         .then((response) => response.json())
         .then((data) => {
           if (data.success) {
             setScrapingStatus('Scraping completed successfully');
-            console.log('Scraping results:', data.data);
+            router.push({
+              pathname: '/results',
+              query: { data: JSON.stringify(data.data) }, // Pass the results as a query parameter
+            });
           } else {
             setScrapingStatus('Scraping failed');
             setError(data.message || 'An unknown error occurred');
           }
         })
         .catch((error) => {
-          console.error('Error during scraping:', error);
           setScrapingStatus('Error occurred during scraping');
           setError(error.toString());
         });
@@ -80,16 +78,12 @@ export default function Home() {
             </form>
             <p className={styles.message}>{scrapingStatus}</p>
             {error && <p className={styles.error}>{error}</p>}
-            <SignOutButton>
-              <button className={styles.button}>Sign Out</button>
-            </SignOutButton>
+            <SignOutButton><button className={styles.button}>Sign Out</button></SignOutButton>
           </>
         ) : (
           <>
             <p className={styles.message}>Please sign in to continue.</p>
-            <SignInButton mode="modal">
-              <button className={styles.button}>Sign In</button>
-            </SignInButton>
+            <SignInButton mode="modal"><button className={styles.button}>Sign In</button></SignInButton>
           </>
         )}
       </center>
