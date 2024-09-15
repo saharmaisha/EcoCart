@@ -76,8 +76,8 @@ async function generateSustainabilityScore(ingredients) {
   
       const prompt = `Based on the following ingredients: ${ingredients}, 
       Rate the product's sustainability on a scale of 1 to 10. Provide the number only with no explanation on the first line. 
-      List the good (sustainable) ingredients in one sentence. 
-      List the bad (unsustainable) ingredients in one sentence.
+      List the sustainable ingredients in one sentence. 
+      List the unsustainable ingredients in one sentence.
       
       Each of the answers to those prompts should be on a new line.`;
   
