@@ -23,7 +23,9 @@ export default function Results() {
             <div key={index} className={styles.productCard}>
               <h2>{product.productName}</h2>
               <p><strong>Ingredients:</strong> {product.ingredients || 'No ingredients found'}</p>
-              <p><strong>Sustainability Score:</strong> <em>Coming soon...</em></p>
+              <p><strong>Sustainability Score: </strong> 
+                {product.sustainabilityScore ? product.sustainabilityScore : <em>Coming soon...</em>}
+              </p>
               <a href={product.url} target="_blank" rel="noopener noreferrer">
                 View Product
               </a>
