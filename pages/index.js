@@ -9,14 +9,6 @@ import {
   GlobalStyle,
 } from '../components/styles';  
 
-// import {
-//   GlobalStyle, 
-//   Container, 
-//   LoginButton, 
-//   Image,
-//   Square, 
-// } from '../components/styles';  
-
 export default function Home() {
   const { isSignedIn } = useAuth();
   const [scrapingStatus, setScrapingStatus] = useState('');
