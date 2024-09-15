@@ -8,17 +8,14 @@ let globalPage;
 
 const baseUrl = 'https://www.amazon.com';
 
-// Initialize OpenAI with your API key
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY, // Ensure the API key is set in your environment
+  apiKey: process.env.OPENAI_API_KEY,
 });
 
-
-// Initialize the browser
 async function initBrowser() {
   if (!globalBrowser) {
     globalBrowser = await chromium.launch({
-      headless: false, // Use headless mode if you don't want the browser UI
+      headless: false,
       args: ['--no-sandbox', '--disable-setuid-sandbox'],
     });
     globalBrowserContext = await globalBrowser.newContext({
@@ -73,14 +70,17 @@ async function loginToAmazon(email, password) {
     }
   }
 
-// Generate sustainability score using OpenAI
-// Generate sustainability score using OpenAI
 async function generateSustainabilityScore(ingredients) {
     try {
       console.log('Generating sustainability score for ingredients:', ingredients);
   
-      const prompt = `Based on the following ingredients: ${ingredients}, rate the product's sustainability on a scale of 1 to 10. Provide the number only. No explanation.`;
+      const prompt = `Based on the following ingredients: ${ingredients}, 
+      Rate the product's sustainability on a scale of 1 to 10. Provide the number only with no explanation on the first line. 
+      List the good (sustainable) ingredients in one sentence. 
+      List the bad (unsustainable) ingredients in one sentence.
       
+      Each of the answers to those prompts should be on a new line.`;
+  
       console.log('Prompt being sent to OpenAI:', prompt);
   
       const response = await openai.chat.completions.create({
@@ -94,18 +94,29 @@ async function generateSustainabilityScore(ingredients) {
       const messageContent = response.choices[0].message.content;
       console.log('Message content:', messageContent);
   
-      // Use regex to extract the number from the response text
-      const scoreMatch = messageContent.match(/\d+(\.\d+)?/);
-      const score = scoreMatch ? parseFloat(scoreMatch[0]) : 5; // Default to 5 if no score found
+      // Extract the sustainability score, good ingredients, and bad ingredients using regex or split by lines
+      const [scoreLine, goodIngredientsLine, badIngredientsLine] = messageContent.split('\n').filter(line => line.trim());
   
-      console.log('Parsed sustainability score:', score);
+      const scoreMatch = scoreLine.match(/\d+(\.\d+)?/);
+      const sustainabilityScore = scoreMatch ? parseFloat(scoreMatch[0]) : 5; // Default to 5 if no score found
+      const goodIngredients = goodIngredientsLine || 'Good ingredients not found';
+      const badIngredients = badIngredientsLine || 'Bad ingredients not found';
   
-      return score; // Return the extracted score
+      return {
+        sustainabilityScore,
+        goodIngredients,
+        badIngredients
+      };
     } catch (error) {
       console.error('Error generating sustainability score:', error);
-      return 5; // Default score in case of error
+      return {
+        sustainabilityScore: 5, // Default score in case of error
+        goodIngredients: 'Unable to determine good ingredients',
+        badIngredients: 'Unable to determine bad ingredients'
+      };
     }
   }
+  
   
 
 // Scraping function
@@ -137,49 +148,58 @@ async function startAmazonScraping(email, password) {
 
     // Iterate over each product link and scrape data
     for (const productUrl of productLinks) {
-      try {
-        console.log(`Navigating to product page: ${productUrl}`);
-        await globalPage.goto(productUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
-
-        // Scrape the product name and ingredients
-        const pageInfo = await globalPage.evaluate(() => {
-          let productName = document.querySelector('#productTitle')?.innerText?.trim() || 'Product name not found';
-          let ingredients = 'Ingredients not found';
-
-          const importantInfoDiv = document.querySelector('#importantInformation_feature_div');
-          if (importantInfoDiv) {
-            const contentSections = importantInfoDiv.querySelectorAll('.a-section.content');
-            contentSections.forEach((section) => {
-              const header = section.querySelector('h4');
-              if (header && header.innerText === 'Ingredients') {
-                const paragraphs = section.querySelectorAll('p');
-                paragraphs.forEach((p) => {
-                  if (p.innerText.trim()) {
-                    ingredients = p.innerText.trim();
-                  }
-                });
-              }
-            });
-          }
-
-          return { productName, ingredients };
-        });
-
-        // Generate the sustainability score for the product
-        const sustainabilityScore = await generateSustainabilityScore(pageInfo.ingredients);
-
-        // Push the product info along with the sustainability score
-        results.push({ url: productUrl, ...pageInfo, sustainabilityScore });
-      } catch (error) {
-        console.error(`Error scraping product ${productUrl}:`, error.message);
-        results.push({
-          url: productUrl,
-          productName: 'Error: Unable to scrape',
-          ingredients: 'Error: Unable to scrape',
-          sustainabilityScore: 'N/A',
-        });
+        try {
+          console.log(`Navigating to product page: ${productUrl}`);
+          await globalPage.goto(productUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
+      
+          // Scrape the product name and ingredients
+          const pageInfo = await globalPage.evaluate(() => {
+            let productName = document.querySelector('#productTitle')?.innerText?.trim() || 'Product name not found';
+            let ingredients = 'Ingredients not found';
+      
+            const importantInfoDiv = document.querySelector('#importantInformation_feature_div');
+            if (importantInfoDiv) {
+              const contentSections = importantInfoDiv.querySelectorAll('.a-section.content');
+              contentSections.forEach((section) => {
+                const header = section.querySelector('h4');
+                if (header && header.innerText === 'Ingredients') {
+                  const paragraphs = section.querySelectorAll('p');
+                  paragraphs.forEach((p) => {
+                    if (p.innerText.trim()) {
+                      ingredients = p.innerText.trim();
+                    }
+                  });
+                }
+              });
+            }
+      
+            return { productName, ingredients };
+          });
+      
+          // Generate the sustainability score, good ingredients, and bad ingredients
+          const { sustainabilityScore, goodIngredients, badIngredients } = await generateSustainabilityScore(pageInfo.ingredients);
+      
+          // Push the product info along with the sustainability score, good and bad ingredients
+          results.push({
+            url: productUrl,
+            ...pageInfo,
+            sustainabilityScore,
+            goodIngredients,
+            badIngredients
+          });
+        } catch (error) {
+          console.error(`Error scraping product ${productUrl}:`, error.message);
+          results.push({
+            url: productUrl,
+            productName: 'Error: Unable to scrape',
+            ingredients: 'Error: Unable to scrape',
+            sustainabilityScore: 'N/A',
+            goodIngredients: 'N/A',
+            badIngredients: 'N/A'
+          });
+        }
       }
-    }
+      
 
     return results;
   } catch (error) {
