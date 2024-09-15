@@ -61,9 +61,6 @@ export default function Home() {
               <img src="/imgs/Logo.png" width="85" height="85" alt="Logo" style={{ display: 'block' }} />
             </a>
           </nav>
-
-          <p className={styles.message}>{scrapingStatus}</p>
-              {error && <p className={styles.error}>{error}</p>}
               <SignOutButton><button className={styles.button} style={{ position: 'fixed', top: 35, right: 20}}>Sign Out</button></SignOutButton>
         </div>
       )}
@@ -132,6 +129,8 @@ export default function Home() {
               >
                 Start Scraping
               </button> 
+              <p className={styles.message} style={{ textAlign: 'center', color: '#3D8C40', marginTop: '20px' }}>{scrapingStatus}</p>
+             {error && <p className={styles.error} style={{ textAlign: 'center', color: 'red', marginTop: '10px' }}>{error}</p>}
             </form> 
             </> 
         ) : (

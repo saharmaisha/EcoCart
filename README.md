@@ -1,20 +1,21 @@
-# **EcoCart - Amazon Scraper with Sustainability Score**
+# **EcoCart - Find Greener, Better Products Instantly**
 
-EcoCart is a AI-enabled tool that analyzes the ingredients of products you shop for on amazon. We use AI to generate a sustainability score, highlight good (sustainable) ingredients, and bad (unsustainable) ingredients for each product based on its ingredient list.
+EcoCart is an AI-enabled tool that analyzes the ingredients of products you shop for on Amazon. By leveraging web scraping, it generates sustainability scores for each product in your Amazon cart, highlights good (sustainable) ingredients, and bad (unsustainable) ingredients. For products with a sustainability score below 5, EcoCart's recommendation system provides more sustainable alternatives to shop for instead.
 
 ## **Features**
-- Secure login using Clerk for authentication.
-- Automates login to Amazon and scraping of product details from the cart.
-- Extracts product names and ingredients from each product page.
-- Sends ingredients to OpenAI to generate a sustainability score, list good ingredients, and list bad ingredients.
-- Displays the results in a front-end web page.
-  
+- **Secure Authentication**: Utilizes Clerk for secure and streamlined authentication, ensuring user login is protected.
+- **Automated Web Scraping**: Uses Playwright for browser automation to log in to Amazon, scrape product details (name, ingredients, etc.), and extract relevant data from the shopping cart.
+- **AI-Powered Analysis**: Sends product ingredients to OpenAI's GPT-3.5-turbo model to generate sustainability scores and classify ingredients as good or bad based on their environmental impact.
+- **User-Friendly Interface**: Displays all scraped and AI-analyzed data, including product names, ingredients, sustainability scores, and suggestions, in a clean, intuitive web interface.
+- **Recommendation System**: Products with sustainability scores lower than 5 trigger an AI-powered recommendation system that suggests more sustainable alternatives based on ingredient data.
+
 ## **Technologies Used**
-- **Node.js**: For backend scripting and automation.
-- **Playwright**: For browser automation to scrape Amazon.
-- **OpenAI API**: To generate sustainability scores and identify good and bad ingredients.
-- **Next.js**: For front-end display of the scraped results.
-  
+- **Node.js**: Handles backend scripting, including the scraping logic and interactions with the OpenAI API.
+- **Playwright**: Facilitates browser automation, allowing the tool to navigate Amazon, log in, and scrape product data.
+- **OpenAI API**: Generates sustainability scores, identifies good and bad ingredients, and powers the recommendation system for unsustainable products.
+- **Clerk**: Secures user authentication, providing a streamlined login experience.
+- **Next.js**: Used for the frontend to display results, providing a modern, responsive user experience.
+
 ## **Setup Instructions**
 
 ### **Prerequisites**
@@ -40,6 +41,7 @@ Create a `.env.local` file in the root directory and set up your environment var
 
 ```bash
 OPENAI_API_KEY=your-openai-api-key
+CLERK_API_KEY=your-clerk-api-key
 ```
 
 ### **4. Run the Application**
@@ -61,22 +63,24 @@ npm run dev
 Then open your browser and navigate to `http://localhost:3000` to see the results.
 
 ## **How it Works**
-1. **Login to Amazon**: The scraper uses Playwright to automate the Amazon login process. After the user is logged in, it navigates to the shopping cart page.
-  
-2. **Scraping Products**: The scraper extracts product links from the Amazon cart and navigates to each product page to extract the product name and its ingredients (if available).
+1. **Login to Amazon**: The scraper uses Playwright to automate the Amazon login process. After the user logs in, it navigates to the shopping cart page.
+
+2. **Scraping Products**: The scraper extracts product links from the Amazon cart and navigates to each product page to extract product names and ingredients (if available).
 
 3. **Generating Sustainability Score**: The list of ingredients is sent to the OpenAI API, which responds with:
    - A sustainability score (on a scale of 1-10).
    - A list of good (sustainable) ingredients.
    - A list of bad (unsustainable) ingredients.
+   
+4. **AI Recommendation System**: For products with a sustainability score lower than 5, the AI system recommends alternative, more sustainable options based on ingredient analysis, providing users with eco-friendlier choices.
 
-4. **Display Results**: The scraped products, along with their sustainability score, good ingredients, and bad ingredients, are displayed in a web interface built using Next.js.
+5. **Display Results**: All the scraped data, including product names, ingredients, sustainability scores, and alternative product suggestions, are displayed on the Next.js-powered web interface.
 
 ## **Important Notes**
 - **Amazon CAPTCHA/OTP**: If Amazon prompts you for CAPTCHA or OTP, you must manually handle this as the script waits for user input during such cases.
 - **Data Privacy**: Make sure not to share or expose your `.env.local` file, as it contains sensitive information like your Amazon login and OpenAI API key.
 
 ## **Future Enhancements**
-- Include support for other e-commerce platforms.
-- Provide recommendations of alternative products for sustainability scores lower than 5.
-- Store and compare historical sustainability scores over time.
+- Expand support to additional e-commerce platforms beyond Amazon.
+- Enhance the AI recommendation system to provide more detailed alternatives for low-scoring products.
+- Introduce a feature that tracks and compares historical sustainability scores over time, helping users make progressively better shopping decisions.

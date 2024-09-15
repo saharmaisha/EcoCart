@@ -6,46 +6,46 @@
     background: #f9f9f9;
     border-radius: 8px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-  }
+}
   
-  /* Grid layout for product cards */
-  .resultsGrid {
+/* Grid layout for product cards */
+.resultsGrid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     grid-gap: 20px;
     padding: 20px;
-  }
+}
   
-  /* Individual product card styling */
-  .productCard {
+/* Individual product card styling */
+.productCard {
     background: #ffffff;
     border: 1px solid #e1e1e1;
     border-radius: 5px;
     padding: 15px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     transition: transform 0.3s ease-in-out;
-  }
+}
   
-  .productCard:hover {
+.productCard:hover {
     transform: scale(1.05);
-  }
+}
   
-  /* Product name styling */
-  .productCard h2 {
+/* Product name styling */
+.productCard h2 {
     font-size: 1.2em;
     color: #333;
     margin-bottom: 10px;
-  }
+}
   
-  /* Paragraph styling for ingredients and other details */
-  .productCard p {
+/* Paragraph styling for ingredients and other details */
+.productCard p {
     font-size: 1em;
     color: #666;
     line-height: 1.5;
-  }
+}
   
-  /* Styling links inside product card as buttons */
-  .productCard a {
+/* Styling links inside product card as buttons */
+.productCard a {
     display: inline-block;
     padding: 8px 16px;
     margin-top: 10px;
@@ -54,30 +54,30 @@
     border-radius: 4px;
     text-decoration: none;
     font-weight: bold;
-  }
+}
   
-  .productCard a:hover {
+.productCard a:hover {
     background: #004494;
-  }
+}
   
-  /* Error message styling */
-  .error {
+/* Error message styling */
+.error {
     color: #b90000;
     font-size: 1.2em;
     text-align: center;
     margin-top: 20px;
-  }
+}
   
-  /* Message styling */
-  .message {
+/* Message styling */
+.message {
     text-align: center;
     font-size: 1.2em;
     color: #2c3e50;
     margin-bottom: 20px;
-  }
+}
   
-  /* Button styling */
-  .button {
+/* Button styling */
+.button {
     padding: 10px 20px;
     border: none;
     background-color: #007bff;
@@ -85,9 +85,39 @@
     border-radius: 5px;
     cursor: pointer;
     font-size: 1em;
-  }
+}
   
-  .button:hover {
+.button:hover {
     background-color: #0056b3;
-  }
+}
   
+/* Green for scores >= 5 */
+.green {
+    color: green;
+    font-weight: bold;
+}
+  
+/* Red for scores < 5 */
+.red {
+    color: red;
+    font-weight: bold;
+}
+  
+/* Recommendations section */
+.recommendations {
+    margin-top: 10px;
+    background-color: #f1f1f1;
+    padding: 10px;
+    border-radius: 8px;
+}
+  
+/* Ordered list for recommendations */
+.recommendations ol {
+    padding-left: 20px;
+}
+  
+.recommendations ol li {
+    margin-bottom: 10px;
+    font-size: 1em;
+    color: #333;
+}

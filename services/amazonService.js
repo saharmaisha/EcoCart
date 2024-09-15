@@ -117,46 +117,70 @@ async function generateSustainabilityScore(ingredients) {
     }
   }
   
+  // Generate alternative product recommendations using OpenAI
+  async function generateRecommendations(productName) {
+    try {
+      const prompt = `Based on the product "${productName}", recommend three alternative, more sustainable products. Provide the names of these products and brief descriptions in the format of name:description with a new line between each. Do NOT number, bullet point, or dash your response.`;
+  
+      console.log('Prompt for recommendations:', prompt);
+  
+      const response = await openai.chat.completions.create({
+        model: 'gpt-3.5-turbo',
+        messages: [{ role: 'user', content: prompt }],
+      });
+  
+      const messageContent = response.choices[0].message.content;
+      console.log('Recommendation response:', messageContent);
+  
+      // Parse the response to extract the recommended products (assuming OpenAI returns a newline-separated list of recommendations)
+      const recommendations = messageContent.split('\n').filter(rec => rec.trim() !== '').slice(0, 3);
+  
+      return recommendations;
+    } catch (error) {
+      console.error('Error generating recommendations:', error);
+      return ['Alternative Product 1', 'Alternative Product 2', 'Alternative Product 3']; // Fallback recommendations
+    }
+  }
   
 
 // Scraping function
 async function startAmazonScraping(email, password) {
-  try {
-    const isLoggedIn = await loginToAmazon(email, password);
-    if (!isLoggedIn) {
-      return { error: 'Login failed' };
-    }
-
-    console.log('Navigating to the Amazon cart page...');
-    await globalPage.goto(`${baseUrl}/gp/cart/view.html`, {
-      waitUntil: 'domcontentloaded',
-      timeout: 120000,
-    });
-
-    // Extract product links from the cart page
-    const productLinks = await globalPage.$$eval(
-      '#sc-active-cart .sc-item-product-title-cont .a-list-item a',
-      (links) => links.map((link) => link.href)
-    );
-
-    if (productLinks.length === 0) {
-      console.warn('No product links found. The cart might be empty.');
-      return [];
-    }
-
-    const results = [];
-
-    // Iterate over each product link and scrape data
-    for (const productUrl of productLinks) {
+    try {
+      const isLoggedIn = await loginToAmazon(email, password);
+      if (!isLoggedIn) {
+        return { error: 'Login failed' };
+      }
+  
+      console.log('Navigating to the Amazon cart page...');
+      await globalPage.goto(`${baseUrl}/gp/cart/view.html`, {
+        waitUntil: 'domcontentloaded',
+        timeout: 120000,
+      });
+  
+      // Extract product links from the cart page
+      const productLinks = await globalPage.$$eval(
+        '#sc-active-cart .sc-item-product-title-cont .a-list-item a',
+        (links) => links.map((link) => link.href)
+      );
+  
+      if (productLinks.length === 0) {
+        console.warn('No product links found. The cart might be empty.');
+        return [];
+      }
+  
+      const results = [];
+  
+      // Iterate over each product link and scrape data
+      for (const productUrl of productLinks) {
         try {
           console.log(`Navigating to product page: ${productUrl}`);
           await globalPage.goto(productUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
-      
+  
           // Scrape the product name and ingredients
           const pageInfo = await globalPage.evaluate(() => {
             let productName = document.querySelector('#productTitle')?.innerText?.trim() || 'Product name not found';
             let ingredients = 'Ingredients not found';
-      
+  
             const importantInfoDiv = document.querySelector('#importantInformation_feature_div');
             if (importantInfoDiv) {
               const contentSections = importantInfoDiv.querySelectorAll('.a-section.content');
@@ -172,20 +196,27 @@ async function startAmazonScraping(email, password) {
                 }
               });
             }
-      
+  
             return { productName, ingredients };
           });
-      
-          // Generate the sustainability score, good ingredients, and bad ingredients
+  
+          // Generate the sustainability score
           const { sustainabilityScore, goodIngredients, badIngredients } = await generateSustainabilityScore(pageInfo.ingredients);
-      
-          // Push the product info along with the sustainability score, good and bad ingredients
+  
+          // Generate recommendations if the sustainability score is less than 5
+          let recommendations = [];
+          if (sustainabilityScore < 5) {
+            recommendations = await generateRecommendations(pageInfo.productName);
+          }
+  
+          // Push the product info along with the sustainability score, good/bad ingredients, and recommendations (if any)
           results.push({
             url: productUrl,
             ...pageInfo,
             sustainabilityScore,
             goodIngredients,
-            badIngredients
+            badIngredients,
+            recommendations
           });
         } catch (error) {
           console.error(`Error scraping product ${productUrl}:`, error.message);
@@ -195,20 +226,20 @@ async function startAmazonScraping(email, password) {
             ingredients: 'Error: Unable to scrape',
             sustainabilityScore: 'N/A',
             goodIngredients: 'N/A',
-            badIngredients: 'N/A'
+            badIngredients: 'N/A',
+            recommendations: []
           });
         }
       }
-      
-
-    return results;
-  } catch (error) {
-    console.error('Error during scraping:', error.message);
-    throw error;
-  } finally {
-    await closeBrowser();
+  
+      return results;
+    } catch (error) {
+      console.error('Error during scraping:', error.message);
+      throw error;
+    } finally {
+      await closeBrowser();
+    }
   }
-}
 
 module.exports = {
   startAmazonScraping,
