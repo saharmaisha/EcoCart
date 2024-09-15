@@ -2,6 +2,20 @@ import { useAuth, SignInButton, SignOutButton } from '@clerk/nextjs';
 import React, { useState } from 'react';
 import { useRouter } from 'next/router';
 import styles from '../styles/Home.module.css';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import { Container } from 'react-bootstrap';
+
+import {
+  GlobalStyle,
+} from '../components/styles';  
+
+// import {
+//   GlobalStyle, 
+//   Container, 
+//   LoginButton, 
+//   Image,
+//   Square, 
+// } from '../components/styles';  
 
 export default function Home() {
   const { isSignedIn } = useAuth();
@@ -46,44 +60,118 @@ export default function Home() {
   };
 
   return (
-    <div className={styles.container}>
+    <div className={styles.container}> 
+      <GlobalStyle />
+      {isSignedIn && (
+        <div> 
+          <nav className="navbar navbar-light bg-transparent" style={{ position: 'fixed', top: 0, left: 10, backgroundColor: 'transparent', border: 'none' }}>
+            <a className="navbar-brand" href="#">
+              <img src="/imgs/Logo.png" width="85" height="85" alt="Logo" style={{ display: 'block' }} />
+            </a>
+          </nav>
+
+          <p className={styles.message}>{scrapingStatus}</p>
+              {error && <p className={styles.error}>{error}</p>}
+              <SignOutButton><button className={styles.button} style={{ position: 'fixed', top: 35, right: 20}}>Sign Out</button></SignOutButton>
+        </div>
+      )}
       <center>
-        {isSignedIn ? (
-          <>
-            <p className={styles.message}>Welcome! You are signed in.</p>
+        {isSignedIn ? ( 
+            <> 
+            <p class="mb-3" style={{color: '#2C5F34', fontSize: '5rem', textAlign: 'center', fontFamily: 'sans-serif', marginBottom: 0, fontWeight: 'bold', marginTop: 20}}>Amazon Login</p>
             <form onSubmit={handleSubmit}>
-              <div>
-                <label htmlFor="amazonEmail">Amazon Email:</label>
-                <input
-                  id="amazonEmail"
-                  type="email"
-                  name="amazonEmail"
+              <div class="form-group mb-3"> 
+                <input 
+                  type="email" 
+                  class="form-control" 
+                  id="amazonEmail" 
+                  name="amazonEmail" 
                   value={formData.amazonEmail}
                   onChange={handleInputChange}
                   required
-                />
-              </div>
-              <div>
-                <label htmlFor="amazonPassword">Amazon Password:</label>
-                <input
-                  id="amazonPassword"
-                  type="password"
+                  placeholder="Email" 
+                  onClick={(e) => {   
+                    e.target.style.borderColor = '#3D8C40';
+                    e.target.style.boxShadow = '0 0 8px rgba(61, 140, 64, 1)';
+                  }}
+                  onBlur={(e) => { 
+                    e.target.style.borderColor = '';   
+                    e.target.style.boxShadow = 'none';     
+                  }}
+                /> 
+              </div> 
+              <div class="form-group mb-3"> 
+                <input 
+                  type="password" 
+                  class="form-control" 
+                  id="amazonPassword" 
                   name="amazonPassword"
                   value={formData.amazonPassword}
                   onChange={handleInputChange}
                   required
+                  placeholder='Password' 
+                  onClick={(e) => { 
+                    e.target.style.borderColor = '#3D8C40';
+                    e.target.style.boxShadow = '0 0 8px rgba(61, 140, 64, 1)';
+                  }}
+                  onBlur={(e) => { 
+                    e.target.style.borderColor = '';   
+                    e.target.style.boxShadow = 'none';     
+                  }}
                 />
-              </div>
-              <button type="submit">Start Scraping</button>
-            </form>
-            <p className={styles.message}>{scrapingStatus}</p>
-            {error && <p className={styles.error}>{error}</p>}
-            <SignOutButton><button className={styles.button}>Sign Out</button></SignOutButton>
-          </>
+              </div> 
+              <button
+                className="btn btn-primary"
+                id="login"
+                type="submit"
+                style={{
+                  backgroundColor: '#2C5F34',  
+                  borderColor: '#2C5F34',     
+                  color: 'white',              
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.backgroundColor = '#3D8C40';  
+                  e.target.style.borderColor = '#3D8C40';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.backgroundColor = '#2C5F34';  
+                  e.target.style.borderColor = '#2C5F34';
+                }}
+              >
+                Start Scraping
+              </button> 
+            </form> 
+            </> 
         ) : (
           <>
-            <p className={styles.message}>Please sign in to continue.</p>
-            <SignInButton mode="modal"><button className={styles.button}>Sign In</button></SignInButton>
+          <Container> 
+            <p style={{color: '#2C5F34', fontSize: '5rem', textAlign: 'center', fontFamily: 'sans-serif', marginBottom: 0, fontWeight: 'bold', marginTop: 2}}>EcoCart</p>
+            <img style={{marginTop: 0, padding: 0}} src="/imgs/Logo.png" alt="Logo" /> 
+            <div class="d-grid gap-2 col-6 mx-auto">
+              <SignInButton mode="modal"> 
+              <button
+                className="btn"
+                id="login"
+                type="button"
+                style={{
+                  backgroundColor: '#2C5F34',  
+                  borderColor: '#2C5F34',     
+                  color: 'white',              
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.backgroundColor = '#3D8C40';  
+                  e.target.style.borderColor = '#3D8C40';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.backgroundColor = '#2C5F34';  
+                  e.target.style.borderColor = '#2C5F34';
+                }}
+              >
+                Login
+              </button>
+              </SignInButton>
+            </div>
+          </Container>
           </>
         )}
       </center>
